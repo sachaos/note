@@ -11,6 +11,10 @@ import (
 
 	"time"
 
+	"os/exec"
+
+	"strings"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/browser"
@@ -124,11 +128,30 @@ func main() {
 		}
 	}()
 
-	if err = browser.OpenURL("http://localhost:1129"); err != nil {
-		panic(err)
+	go func() {
+		if err = browser.OpenURL("http://localhost:1129"); err != nil {
+			panic(err)
+		}
+	}()
+
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		log.Println("Set $EDITOR")
+		os.Exit(1)
 	}
 
-	for {
-		time.Sleep(1 * time.Second)
+	splitted := strings.Split(editor, " ")
+	log.Printf("splitted: %#v\n", splitted)
+	cname := splitted[0]
+	args := splitted[1:]
+	args = append(args, filename)
+
+	cmd := exec.Command(cname, args[:]...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+
+	if err = cmd.Run(); err != nil {
+		log.Printf("editor error: %v\n", err)
+		os.Exit(1)
 	}
 }
