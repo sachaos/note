@@ -28,7 +28,7 @@ func markdownFileToHTML(filename string) []byte {
 		os.Exit(1)
 	}
 
-	return blackfriday.Run(bytes, blackfriday.WithNoExtensions())
+	return blackfriday.Run(bytes, blackfriday.WithExtensions(blackfriday.Tables|blackfriday.FencedCode))
 }
 
 var template = `
