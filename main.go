@@ -3,29 +3,128 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 
+	"io"
+	"net/http"
+
+	"time"
+
+	"github.com/fsnotify/fsnotify"
+	"github.com/gorilla/websocket"
+	"github.com/pkg/browser"
 	blackfriday "gopkg.in/russross/blackfriday.v2"
 )
 
-func main() {
-	var bytes []byte
-	var err error
-	if len(os.Args) < 2 {
-		bytes, err = ioutil.ReadAll(os.Stdin)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v", err)
-			os.Exit(1)
-		}
-	} else {
-		filename := os.Args[1]
-		bytes, err = ioutil.ReadFile(filename)
-
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v", err)
-			os.Exit(1)
-		}
+func markdownFileToHTML(filename string) []byte {
+	bytes, err := ioutil.ReadFile(filename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v", err)
+		os.Exit(1)
 	}
-	result := blackfriday.Run(bytes, blackfriday.WithNoExtensions())
-	fmt.Println(string(result))
+
+	return blackfriday.Run(bytes, blackfriday.WithNoExtensions())
+}
+
+var template = `
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8"/>
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="content"></div>
+    <script>
+     window.onload = function () {
+         if (!window["WebSocket"]) {
+             alert("エラー : WebSocketに対応していないブラウザです。")
+         } else {
+             socket = new WebSocket("ws://localhost:1129/ws");
+             socket.onclose = function() {
+                 alert(" 接続が終了しました。");
+             }
+             socket.onmessage = function(e) {
+                 var content = document.getElementById('content');
+                 content.innerHTML = e.data;
+             }
+         }
+     };
+    </script>
+  </body>
+</html>
+`
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
+func main() {
+	var err error
+
+	filename := os.Args[1]
+
+	result := markdownFileToHTML(filename)
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		_, err = io.WriteString(w, template)
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watcher.Close()
+
+	err = watcher.Add(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		ws, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			if _, ok := err.(websocket.HandshakeError); !ok {
+				log.Println(err)
+			}
+			return
+		}
+		go func() {
+			for {
+				select {
+				case event := <-watcher.Events:
+					result = markdownFileToHTML(filename)
+					ws.WriteMessage(websocket.TextMessage, result)
+					log.Println("event:", event)
+					if event.Op&fsnotify.Write == fsnotify.Write {
+						log.Println("modified file:", event.Name)
+					}
+				case err := <-watcher.Errors:
+					log.Println("error:", err)
+				}
+			}
+		}()
+		for {
+			time.Sleep(1 * time.Second)
+		}
+	})
+
+	go func() {
+		if err = http.ListenAndServe(":1129", nil); err != nil {
+			panic(err)
+		}
+	}()
+
+	if err = browser.OpenURL("http://localhost:1129"); err != nil {
+		panic(err)
+	}
+
+	for {
+		time.Sleep(1 * time.Second)
+	}
 }
