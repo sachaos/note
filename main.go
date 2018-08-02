@@ -94,6 +94,10 @@ func main() {
 			}
 			return
 		}
+
+		result = markdownFileToHTML(filename)
+		ws.WriteMessage(websocket.TextMessage, result)
+
 		go func() {
 			for {
 				select {
