@@ -24,7 +24,7 @@ import (
 func markdownFileToHTML(filename string) []byte {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
 
@@ -75,26 +75,30 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err = io.WriteString(w, template)
 		if err != nil {
-			panic(err)
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+			os.Exit(1)
 		}
 	})
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
 	}
 	defer watcher.Close()
 
 	err = watcher.Add(filename)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
 	}
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		ws, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			if _, ok := err.(websocket.HandshakeError); !ok {
-				log.Println(err)
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+				os.Exit(1)
 			}
 			return
 		}
@@ -124,19 +128,21 @@ func main() {
 
 	go func() {
 		if err = http.ListenAndServe(":1129", nil); err != nil {
-			panic(err)
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+			os.Exit(1)
 		}
 	}()
 
 	go func() {
 		if err = browser.OpenURL("http://localhost:1129"); err != nil {
-			panic(err)
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+			os.Exit(1)
 		}
 	}()
 
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
-		log.Println("Set $EDITOR")
+		fmt.Fprintf(os.Stderr, "Set $EDITOR\n")
 		os.Exit(1)
 	}
 
@@ -151,7 +157,7 @@ func main() {
 	cmd.Stdout = os.Stdout
 
 	if err = cmd.Run(); err != nil {
-		log.Printf("editor error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "editor error: %v\n", err)
 		os.Exit(1)
 	}
 }
