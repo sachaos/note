@@ -4,15 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
-
 	"net/http"
-
-	"time"
-
+	"os"
 	"os/exec"
-
 	"strings"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
