@@ -20,8 +20,6 @@ import (
 	"github.com/rakyll/statik/fs"
 	blackfriday "gopkg.in/russross/blackfriday.v2"
 
-	"io"
-
 	_ "github.com/sachaos/md2html/statik"
 )
 
@@ -63,14 +61,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		index, err := statikFS.Open("/index.html")
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-			os.Exit(1)
-		}
-		io.Copy(w, index)
-	})
+	http.Handle("/", http.StripPrefix("/", http.FileServer(statikFS)))
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
