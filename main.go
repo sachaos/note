@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 
-	"io"
 	"net/http"
 
 	"time"
@@ -18,7 +17,12 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/browser"
+	"github.com/rakyll/statik/fs"
 	blackfriday "gopkg.in/russross/blackfriday.v2"
+
+	"io"
+
+	_ "github.com/sachaos/md2html/statik"
 )
 
 var logFlag = false
@@ -33,40 +37,13 @@ func markdownFileToHTML(filename string) []byte {
 	return blackfriday.Run(bytes, blackfriday.WithExtensions(blackfriday.Tables|blackfriday.FencedCode))
 }
 
+//go:generate statik -src=html
+
 func logPrintln(v ...interface{}) {
 	if logFlag {
 		log.Println(v)
 	}
 }
-
-var template = `
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8"/>
-    <title>Document</title>
-  </head>
-  <body>
-    <div id="content"></div>
-    <script>
-     window.onload = function () {
-         if (!window["WebSocket"]) {
-             alert("エラー : WebSocketに対応していないブラウザです。")
-         } else {
-             socket = new WebSocket("ws://localhost:1129/ws");
-             socket.onclose = function() {
-                 alert(" 接続が終了しました。");
-             }
-             socket.onmessage = function(e) {
-                 var content = document.getElementById('content');
-                 content.innerHTML = e.data;
-             }
-         }
-     };
-    </script>
-  </body>
-</html>
-`
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -80,12 +57,19 @@ func main() {
 
 	result := markdownFileToHTML(filename)
 
+	statikFS, err := fs.New()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err = io.WriteString(w, template)
+		index, err := statikFS.Open("/index.html")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
 			os.Exit(1)
 		}
+		io.Copy(w, index)
 	})
 
 	watcher, err := fsnotify.NewWatcher()
