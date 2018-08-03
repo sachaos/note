@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
@@ -19,13 +18,13 @@ import (
 	_ "github.com/sachaos/md2html/statik"
 )
 
-var logFlag = false
+var logFlag = true
 
 func markdownFileToHTML(filename string) []byte {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
+		logPrintln(err)
+		panic(err)
 	}
 
 	return blackfriday.Run(bytes, blackfriday.WithExtensions(blackfriday.Tables|blackfriday.FencedCode))
@@ -44,81 +43,83 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-func main() {
-	var err error
+type mdToHTML struct {
+	initialFileName string
+	fw              *fsnotify.Watcher
+	subscribers     []*websocket.Conn
+}
 
-	filename := os.Args[1]
-
-	result := markdownFileToHTML(filename)
-
-	statikFS, err := fs.New()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
-	}
-
-	http.Handle("/", http.StripPrefix("/", http.FileServer(statikFS)))
-
+// TODO: It should be return err
+func newMdToHTML(filename string) *mdToHTML {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
+		logPrintln(err)
+		panic(err)
 	}
-	defer watcher.Close()
+	return &mdToHTML{initialFileName: filename, fw: watcher}
+}
 
-	err = watcher.Add(filename)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
+func (m *mdToHTML) Close() error {
+	return m.fw.Close()
+}
+
+// TODO: It should be return err
+func (m *mdToHTML) AddFile(filename string) {
+	if err := m.fw.Add(filename); err != nil {
+		logPrintln(err)
+		panic(err)
 	}
+}
 
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		ws, err := upgrader.Upgrade(w, r, nil)
-		if err != nil {
-			if _, ok := err.(websocket.HandshakeError); !ok {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
-				os.Exit(1)
-			}
-			return
-		}
-
-		result = markdownFileToHTML(filename)
-		ws.WriteMessage(websocket.TextMessage, result)
-
-		go func() {
-			for {
-				select {
-				case event := <-watcher.Events:
-					result = markdownFileToHTML(filename)
-					ws.WriteMessage(websocket.TextMessage, result)
-					logPrintln("event:", event)
-					if event.Op&fsnotify.Write == fsnotify.Write {
-						logPrintln("modified file:", event.Name)
-					}
-				case err := <-watcher.Errors:
-					logPrintln("WatchError:", err)
+func (m *mdToHTML) Start() {
+	for {
+		select {
+		case event := <-m.fw.Events:
+			for _, ws := range m.subscribers {
+				logPrintln("event:", event)
+				result := markdownFileToHTML(event.Name)
+				if err := ws.WriteMessage(websocket.TextMessage, result); err != nil {
+					logPrintln(err)
+					return
 				}
 			}
-		}()
-		for {
-			time.Sleep(1 * time.Second)
+		case err := <-m.fw.Errors:
+			logPrintln("WatchError:", err)
+			return
 		}
-	})
+	}
+}
 
-	go func() {
-		if err = http.ListenAndServe(":1129", nil); err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-			os.Exit(1)
+func (m *mdToHTML) Subscribe(w http.ResponseWriter, r *http.Request) {
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		if _, ok := err.(websocket.HandshakeError); !ok {
+			logPrintln(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-	}()
+	}
 
-	go func() {
-		if err = browser.OpenURL("http://localhost:1129"); err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-			os.Exit(1)
+	m.AddFile(m.initialFileName)
+
+	result := markdownFileToHTML(m.initialFileName)
+	if err = ws.WriteMessage(websocket.TextMessage, result); err != nil {
+		logPrintln(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	m.subscribers = append(m.subscribers, ws)
+
+	for {
+		if _, _, err := ws.ReadMessage(); err != nil {
+			break
 		}
-	}()
+	}
+	ws.Close()
+}
 
+func runEditor(filename string) {
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
 		fmt.Fprintf(os.Stderr, "Set $EDITOR\n")
@@ -135,8 +136,43 @@ func main() {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 
-	if err = cmd.Run(); err != nil {
+	if err := cmd.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "editor error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func main() {
+	var err error
+
+	filename := os.Args[1]
+
+	statikFS, err := fs.New()
+	if err != nil {
+		logPrintln(err)
+		panic(err)
+	}
+
+	mdToHTML := newMdToHTML(filename)
+	go mdToHTML.Start()
+	defer mdToHTML.Close()
+
+	http.Handle("/", http.StripPrefix("/", http.FileServer(statikFS)))
+	http.HandleFunc("/ws", mdToHTML.Subscribe)
+
+	go func() {
+		if err = http.ListenAndServe(":1129", nil); err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+			os.Exit(1)
+		}
+	}()
+
+	go func() {
+		if err = browser.OpenURL("http://localhost:1129"); err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+			os.Exit(1)
+		}
+	}()
+
+	runEditor(filename)
 }
