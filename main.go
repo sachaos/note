@@ -21,6 +21,8 @@ import (
 	blackfriday "gopkg.in/russross/blackfriday.v2"
 )
 
+var logFlag = false
+
 func markdownFileToHTML(filename string) []byte {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -29,6 +31,12 @@ func markdownFileToHTML(filename string) []byte {
 	}
 
 	return blackfriday.Run(bytes, blackfriday.WithExtensions(blackfriday.Tables|blackfriday.FencedCode))
+}
+
+func logPrintln(v ...interface{}) {
+	if logFlag {
+		log.Println(v)
+	}
 }
 
 var template = `
@@ -112,12 +120,12 @@ func main() {
 				case event := <-watcher.Events:
 					result = markdownFileToHTML(filename)
 					ws.WriteMessage(websocket.TextMessage, result)
-					log.Println("event:", event)
+					logPrintln("event:", event)
 					if event.Op&fsnotify.Write == fsnotify.Write {
-						log.Println("modified file:", event.Name)
+						logPrintln("modified file:", event.Name)
 					}
 				case err := <-watcher.Errors:
-					log.Println("error:", err)
+					logPrintln("WatchError:", err)
 				}
 			}
 		}()
