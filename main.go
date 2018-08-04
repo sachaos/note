@@ -28,7 +28,7 @@ func markdownFileToHTML(filename string) []byte {
 		panic(err)
 	}
 
-	return blackfriday.Run(bytes, blackfriday.WithExtensions(blackfriday.Tables|blackfriday.FencedCode))
+	return blackfriday.Run(bytes, blackfriday.WithExtensions(blackfriday.CommonExtensions))
 }
 
 //go:generate statik -f -src=html

@@ -9,7 +9,7 @@ window.onload = function () {
         socket.onmessage = function(e) {
             var content = document.getElementById('content');
             content.innerHTML = e.data;
-            var codeBlocks = document.getElementsByTagName('code');
+            var codeBlocks = document.querySelectorAll('pre code');
             Array.prototype.forEach.call(codeBlocks, function(item) {
                 console.log("block found");
                 console.log(item);
