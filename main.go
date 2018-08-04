@@ -128,7 +128,7 @@ func runEditor(filename string) {
 	}
 
 	splitted := strings.Split(editor, " ")
-	log.Printf("splitted: %#v\n", splitted)
+	logPrintln("splitted: %#v\n", splitted)
 	cname := splitted[0]
 	args := splitted[1:]
 	args = append(args, filename)
