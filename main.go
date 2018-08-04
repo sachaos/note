@@ -114,6 +114,7 @@ func (m *mdToHTML) Subscribe(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		if _, _, err := ws.ReadMessage(); err != nil {
+			logPrintln(err)
 			break
 		}
 	}
