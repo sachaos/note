@@ -15,7 +15,7 @@ import (
 	"github.com/rakyll/statik/fs"
 	blackfriday "gopkg.in/russross/blackfriday.v2"
 
-	_ "github.com/sachaos/md2html/statik"
+	_ "github.com/sachaos/mu/statik"
 )
 
 // TODO: Enable to control by option
@@ -44,35 +44,35 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-type mdToHTML struct {
+type markupServer struct {
 	initialFileName string
 	fw              *fsnotify.Watcher
 	subscribers     []*websocket.Conn
 }
 
 // TODO: It should be return err
-func newMdToHTML(filename string) *mdToHTML {
+func newMarkupServer(filename string) *markupServer {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		logPrintln(err)
 		panic(err)
 	}
-	return &mdToHTML{initialFileName: filename, fw: watcher}
+	return &markupServer{initialFileName: filename, fw: watcher}
 }
 
-func (m *mdToHTML) Close() error {
+func (m *markupServer) Close() error {
 	return m.fw.Close()
 }
 
 // TODO: It should be return err
-func (m *mdToHTML) AddFile(filename string) {
+func (m *markupServer) AddFile(filename string) {
 	if err := m.fw.Add(filename); err != nil {
 		logPrintln(err)
 		panic(err)
 	}
 }
 
-func (m *mdToHTML) Start() {
+func (m *markupServer) Start() {
 	for {
 		select {
 		case event := <-m.fw.Events:
@@ -91,7 +91,7 @@ func (m *mdToHTML) Start() {
 	}
 }
 
-func (m *mdToHTML) Subscribe(w http.ResponseWriter, r *http.Request) {
+func (m *markupServer) Subscribe(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		if _, ok := err.(websocket.HandshakeError); !ok {
@@ -171,12 +171,12 @@ func main() {
 		panic(err)
 	}
 
-	mdToHTML := newMdToHTML(filename)
-	go mdToHTML.Start()
-	defer mdToHTML.Close()
+	markupServer := newMarkupServer(filename)
+	go markupServer.Start()
+	defer markupServer.Close()
 
 	http.Handle("/", http.StripPrefix("/", http.FileServer(statikFS)))
-	http.HandleFunc("/ws", mdToHTML.Subscribe)
+	http.HandleFunc("/ws", markupServer.Subscribe)
 
 	go func() {
 		if err = http.ListenAndServe(":1129", nil); err != nil {
