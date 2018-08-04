@@ -146,7 +146,23 @@ func runEditor(filename string) {
 func main() {
 	var err error
 
+	if len(os.Args) < 2 {
+		fmt.Fprintln(os.Stderr, "Specify filename by argument")
+		os.Exit(1)
+	}
+
 	filename := os.Args[1]
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		file, err := os.Create(filename)
+		if err != nil {
+			logPrintln(err)
+			os.Exit(1)
+		}
+		if err = file.Close(); err != nil {
+			logPrintln(err)
+			os.Exit(1)
+		}
+	}
 
 	statikFS, err := fs.New()
 	if err != nil {
