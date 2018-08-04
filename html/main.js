@@ -1,10 +1,10 @@
 window.onload = function () {
     if (!window["WebSocket"]) {
-        alert("エラー : WebSocketに対応していないブラウザです。");
+        alert("Error! Your browser is out of support.");
     } else {
         socket = new WebSocket("ws://localhost:1129/ws");
         socket.onclose = function() {
-            alert(" 接続が終了しました。");
+            console.log("Connection closed.");
         };
         socket.onmessage = function(e) {
             var content = document.getElementById('content');
