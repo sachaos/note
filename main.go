@@ -31,7 +31,7 @@ func markdownFileToHTML(filename string) []byte {
 	return blackfriday.Run(bytes, blackfriday.WithExtensions(blackfriday.Tables|blackfriday.FencedCode))
 }
 
-//go:generate statik -src=html
+//go:generate statik -f -src=html
 
 func logPrintln(v ...interface{}) {
 	if logFlag {
