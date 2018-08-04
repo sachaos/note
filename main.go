@@ -18,7 +18,8 @@ import (
 	_ "github.com/sachaos/md2html/statik"
 )
 
-var logFlag = true
+// TODO: Enable to control by option
+var logFlag = false
 
 func markdownFileToHTML(filename string) []byte {
 	bytes, err := ioutil.ReadFile(filename)
