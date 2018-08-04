@@ -11,8 +11,6 @@ window.onload = function () {
             content.innerHTML = e.data;
             var codeBlocks = document.querySelectorAll('pre code');
             Array.prototype.forEach.call(codeBlocks, function(item) {
-                console.log("block found");
-                console.log(item);
                 hljs.highlightBlock(item);
             });
         };
