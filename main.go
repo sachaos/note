@@ -10,7 +10,7 @@ import (
 	_ "github.com/sachaos/mu/statik"
 )
 
-//go:generate statik -f -src=html
+//go:generate statik -f -src=assets
 
 func main() {
 	var err error
