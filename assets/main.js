@@ -10,8 +10,14 @@ window.onload = function () {
             PNotify.success("Connection open! Enjoy!");
         };
         socket.onmessage = function(e) {
+            var data = JSON.parse(e.data);
+
             var content = document.getElementById('content');
-            content.innerHTML = JSON.parse(e.data).html;
+            content.innerHTML = data.html;
+
+            var title = document.getElementsByTagName('title')[0];
+            title.textContent = data.title;
+
             var codeBlocks = document.querySelectorAll('pre code');
             Array.prototype.forEach.call(codeBlocks, function(item) {
                 hljs.highlightBlock(item);

@@ -11,11 +11,15 @@ import (
 )
 
 type message struct {
-	HTML string `json:"html"`
+	Title string `json:"title"`
+	HTML  string `json:"html"`
 }
 
-func createMessage(html []byte) []byte {
-	msg := message{HTML: string(html)}
+func createMessage(html []byte, title string) []byte {
+	msg := message{
+		Title: title,
+		HTML:  string(html),
+	}
 	bytes, err := json.Marshal(msg)
 	if err != nil {
 		logPrintln(err)
@@ -59,7 +63,7 @@ func (m *markupHandler) Start() {
 			for _, ws := range m.subscribers {
 				logPrintln("event:", event)
 				result := markdownFileToHTML(event.Name)
-				msg := createMessage(result)
+				msg := createMessage(result, m.initialFileName)
 
 				if err := ws.WriteMessage(websocket.TextMessage, msg); err != nil {
 					logPrintln(err)
@@ -91,7 +95,7 @@ func (m *markupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m.AddFile(m.initialFileName)
 
 	result := markdownFileToHTML(m.initialFileName)
-	msg := createMessage(result)
+	msg := createMessage(result, m.initialFileName)
 	if err = ws.WriteMessage(websocket.TextMessage, msg); err != nil {
 		logPrintln(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
