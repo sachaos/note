@@ -11,7 +11,7 @@ window.onload = function () {
         };
         socket.onmessage = function(e) {
             var content = document.getElementById('content');
-            content.innerHTML = e.data;
+            content.innerHTML = JSON.parse(e.data).html;
             var codeBlocks = document.querySelectorAll('pre code');
             Array.prototype.forEach.call(codeBlocks, function(item) {
                 hljs.highlightBlock(item);

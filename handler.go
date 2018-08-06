@@ -1,11 +1,28 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
+	blackfriday "gopkg.in/russross/blackfriday.v2"
 )
+
+type message struct {
+	HTML string `json:"html"`
+}
+
+func createMessage(html []byte) []byte {
+	msg := message{HTML: string(html)}
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		logPrintln(err)
+		return []byte{}
+	}
+	return bytes
+}
 
 type markupHandler struct {
 	initialFileName string
@@ -42,7 +59,9 @@ func (m *markupHandler) Start() {
 			for _, ws := range m.subscribers {
 				logPrintln("event:", event)
 				result := markdownFileToHTML(event.Name)
-				if err := ws.WriteMessage(websocket.TextMessage, result); err != nil {
+				msg := createMessage(result)
+
+				if err := ws.WriteMessage(websocket.TextMessage, msg); err != nil {
 					logPrintln(err)
 					return
 				}
@@ -72,7 +91,8 @@ func (m *markupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m.AddFile(m.initialFileName)
 
 	result := markdownFileToHTML(m.initialFileName)
-	if err = ws.WriteMessage(websocket.TextMessage, result); err != nil {
+	msg := createMessage(result)
+	if err = ws.WriteMessage(websocket.TextMessage, msg); err != nil {
 		logPrintln(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -87,4 +107,14 @@ func (m *markupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	ws.Close()
+}
+
+func markdownFileToHTML(filename string) []byte {
+	bytes, err := ioutil.ReadFile(filename)
+	if err != nil {
+		logPrintln(err)
+		panic(err)
+	}
+
+	return blackfriday.Run(bytes, blackfriday.WithExtensions(blackfriday.CommonExtensions))
 }

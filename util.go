@@ -2,13 +2,10 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
-
-	blackfriday "gopkg.in/russross/blackfriday.v2"
 )
 
 // TODO: Enable to control by option
@@ -20,15 +17,6 @@ func logPrintln(v ...interface{}) {
 	}
 }
 
-func markdownFileToHTML(filename string) []byte {
-	bytes, err := ioutil.ReadFile(filename)
-	if err != nil {
-		logPrintln(err)
-		panic(err)
-	}
-
-	return blackfriday.Run(bytes, blackfriday.WithExtensions(blackfriday.CommonExtensions))
-}
 func runEditor(filename string) {
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
