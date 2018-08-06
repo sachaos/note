@@ -4,7 +4,10 @@ window.onload = function () {
     } else {
         socket = new WebSocket("ws://localhost:1129/ws");
         socket.onclose = function() {
-            console.log("Connection closed.");
+            PNotify.error("Connection closed.");
+        };
+        socket.onopen = function() {
+            PNotify.success("Connection open!");
         };
         socket.onmessage = function(e) {
             var content = document.getElementById('content');
