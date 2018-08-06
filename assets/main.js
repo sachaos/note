@@ -7,7 +7,7 @@ window.onload = function () {
             PNotify.error("Connection closed.");
         };
         socket.onopen = function() {
-            PNotify.success("Connection open!");
+            PNotify.success("Connection open! Enjoy!");
         };
         socket.onmessage = function(e) {
             var content = document.getElementById('content');
