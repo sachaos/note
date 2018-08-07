@@ -4,6 +4,7 @@
   "description": "",
   "main": "main.js",
   "dependencies": {
+    "github-markdown-css": "^2.10.0",
     "pnotify": "^4.0.0-alpha.4"
   },
   "devDependencies": {},
