@@ -2,8 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
@@ -13,12 +16,14 @@ import (
 type message struct {
 	Title string `json:"title"`
 	HTML  string `json:"html"`
+	Lines []int  `json:"lines"`
 }
 
-func createMessage(html []byte, title string) []byte {
+func createMessage(html []byte, title string, lines []int) []byte {
 	msg := message{
 		Title: title,
-		HTML:  string(html),
+		HTML:  injectAnchor(html),
+		Lines: lines,
 	}
 	bytes, err := json.Marshal(msg)
 	if err != nil {
@@ -28,10 +33,19 @@ func createMessage(html []byte, title string) []byte {
 	return bytes
 }
 
+func injectAnchor(html []byte) string {
+	var out string
+	for i, str := range strings.Split(string(html), "\n") {
+		out += fmt.Sprintf("<a id=\"%d\"></a>", i) + str
+	}
+	return out
+}
+
 type markupHandler struct {
 	initialFileName string
 	fw              *fsnotify.Watcher
 	subscribers     []*websocket.Conn
+	current         []byte
 }
 
 // TODO: It should be return err
@@ -63,7 +77,9 @@ func (m *markupHandler) Start() {
 			for _, ws := range m.subscribers {
 				logPrintln("event:", event)
 				result := markdownFileToHTML(event.Name)
-				msg := createMessage(result, m.initialFileName)
+				lines := diffLines(string(m.current), string(result))
+				m.current = result
+				msg := createMessage(result, m.initialFileName, lines)
 
 				if err := ws.WriteMessage(websocket.TextMessage, msg); err != nil {
 					logPrintln(err)
@@ -95,7 +111,8 @@ func (m *markupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m.AddFile(m.initialFileName)
 
 	result := markdownFileToHTML(m.initialFileName)
-	msg := createMessage(result, m.initialFileName)
+	m.current = result
+	msg := createMessage(result, m.initialFileName, []int{})
 	if err = ws.WriteMessage(websocket.TextMessage, msg); err != nil {
 		logPrintln(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
