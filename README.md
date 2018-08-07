@@ -1,12 +1,12 @@
 note
 ===
 
-Simple realtime Markdown previewer & editor.
+Simple Real-time Markdown previewer & editor.
 
 ## Description
 
 `note` is a command written in Golang.
-This command improve your Markdown editing experience on your favorite editor(emacs, vim etc) by rendering on Web browser in realtime.
+This command improve your Markdown editing experience on your favorite editor(emacs, vim etc) by rendering on Web browser in real time.
 
 This software watch markdown file which you are editing, and serve that markuped HTML to browser through WebSocket when that file changed.
 
