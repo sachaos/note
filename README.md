@@ -12,7 +12,7 @@ This software watch markdown file which you are editing, and serve that markuped
 
 ## Demo
 
-This is demo
+![note2 mp4](https://user-images.githubusercontent.com/6121271/43771050-f421ce64-9a78-11e8-9457-256234365032.gif)
 
 ## Install
 
