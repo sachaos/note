@@ -16,7 +16,21 @@ This software watch markdown file which you are editing, and serve that markuped
 
 ## Install
 
+### Binary
+
+Go to [release page](https://github.com/sachaos/note/releases) and download.
+
 ```shell
+$ wget https://github.com/sachaos/note/releases/download/v0.0.1/note_darwin_amd64 -O /usr/local/bin/note
+$ chmod +x /usr/local/bin/note
+```
+
+### Manually Build
+
+You need Golang compiler, and [golang/dep: Go dependency management tool](https://github.com/golang/dep), and npm.
+
+```shell
+$ git clone https://github.com/sachaos/note.git
 $ make install
 ```
 
