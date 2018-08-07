@@ -19,10 +19,19 @@ window.onload = function () {
             title.textContent = data.title;
 
             if (data.lines.length != 0) {
-                var maxLine = Math.max.apply(null, data.lines);;
-                var element = document.getElementById(maxLine);
-                if (element) {
-                    window.scroll(0, element.offsetTop);
+                var maxLine = Math.max.apply(null, data.lines);
+                var minLine = Math.min.apply(null, data.lines);
+
+                var maxOffset = document.getElementById(maxLine).offsetTop;
+                var minOffset = document.getElementById(minLine).offsetTop;
+
+                var windowMinOffset = window.pageYOffset;
+                var windowMaxOffset = window.pageYOffset + window.innerHeight;
+
+                if (maxOffset > windowMaxOffset) {
+                    window.scroll(0, maxOffset);
+                } else if (minOffset < windowMinOffset) {
+                    window.scroll(0, minOffset);
                 }
             }
 
