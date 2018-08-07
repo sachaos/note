@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -8,35 +9,41 @@ import (
 	"github.com/pkg/browser"
 	"github.com/rakyll/statik/fs"
 	_ "github.com/sachaos/mu/statik"
+	"github.com/urfave/cli"
 )
 
 //go:generate statik -f -src=assets
 
-func main() {
+func before(c *cli.Context) error {
+	if c.GlobalBool("debug") {
+		logFlag = true
+	}
+	return nil
+}
+
+func run(c *cli.Context) error {
 	var err error
 
-	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "Specify filename by argument")
-		os.Exit(1)
+	logPrintln("c.Args(): ", c.Args())
+
+	if len(c.Args()) != 1 {
+		return errors.New("Specify filename by argument")
 	}
 
-	filename := os.Args[1]
+	filename := c.Args()[0]
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		file, err := os.Create(filename)
 		if err != nil {
-			logPrintln(err)
-			os.Exit(1)
+			return err
 		}
 		if err = file.Close(); err != nil {
-			logPrintln(err)
-			os.Exit(1)
+			return err
 		}
 	}
 
 	statikFS, err := fs.New()
 	if err != nil {
-		logPrintln(err)
-		panic(err)
+		return err
 	}
 
 	markupHandler := newMarkupServer(filename)
@@ -47,18 +54,41 @@ func main() {
 	http.Handle("/ws", markupHandler)
 
 	go func() {
-		if err = http.ListenAndServe(":1129", nil); err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
+		logPrintln("Call http.ListenAndServe")
+		if err := http.ListenAndServe(":1129", nil); err != nil {
+			logPrintln(err)
 			os.Exit(1)
 		}
 	}()
 
-	go func() {
-		if err = browser.OpenURL("http://localhost:1129"); err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-			os.Exit(1)
-		}
-	}()
+	logPrintln("Call openURL")
+	if err = browser.OpenURL("http://localhost:1129"); err != nil {
+		return err
+	}
 
-	runEditor(filename)
+	logPrintln("Call runEditor()")
+	return runEditor(filename)
+}
+
+func main() {
+	app := cli.NewApp()
+	app.Name = "note"
+	app.Usage = "Realtime markdown previewer"
+	app.Version = "0.0.1"
+
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:   "debug",
+			Hidden: true,
+		},
+	}
+
+	app.Before = cli.BeforeFunc(before)
+	app.Action = cli.ActionFunc(run)
+
+	if err := app.Run(os.Args); err != nil {
+		logPrintln(err)
+		fmt.Fprintln(os.Stderr, "Error:", err)
+		os.Exit(1)
+	}
 }

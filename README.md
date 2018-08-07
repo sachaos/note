@@ -19,4 +19,3 @@ This is demo
 ```shell
 $ make install
 ```
-

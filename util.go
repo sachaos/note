@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"log"
 	"os"
 	"os/exec"
@@ -17,11 +17,12 @@ func logPrintln(v ...interface{}) {
 	}
 }
 
-func runEditor(filename string) {
+func runEditor(filename string) error {
 	editor := os.Getenv("EDITOR")
+	logPrintln("$EDITOR", editor)
+
 	if editor == "" {
-		fmt.Fprintf(os.Stderr, "Set $EDITOR\n")
-		os.Exit(1)
+		return errors.New("Set $EDITOR")
 	}
 
 	splitted := strings.Split(editor, " ")
@@ -34,8 +35,5 @@ func runEditor(filename string) {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 
-	if err := cmd.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "editor error: %v\n", err)
-		os.Exit(1)
-	}
+	return cmd.Run()
 }
