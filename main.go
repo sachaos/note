@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/browser"
 	"github.com/rakyll/statik/fs"
-	_ "github.com/sachaos/mu/statik"
+	_ "github.com/sachaos/note/statik"
 	"github.com/urfave/cli"
 )
 

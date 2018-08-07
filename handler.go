@@ -36,7 +36,7 @@ func createMessage(html []byte, title string, lines []int) []byte {
 func injectAnchor(html []byte) string {
 	var out string
 	for i, str := range strings.Split(string(html), "\n") {
-		out += fmt.Sprintf("<a id=\"%d\"></a>", i) + str
+		out += fmt.Sprintf("<a id=\"%d\"></a>", i) + str + "\n"
 	}
 	return out
 }

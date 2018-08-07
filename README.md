@@ -1,11 +1,11 @@
-mu (MarkUp)
+note
 ===
 
 Simple realtime Markdown previewer & editor.
 
 ## Description
 
-`mu` is a command written in Golang.
+`note` is a command written in Golang.
 This command improve your Markdown editing experience on your favorite editor(emacs, vim etc) by rendering on Web browser in realtime.
 
 This software watch markdown file which you are editing, and serve that markuped HTML to browser through WebSocket when that file changed.
@@ -18,4 +18,10 @@ This is demo
 
 ```shell
 $ make install
+```
+
+## How to use
+
+```shell
+$ note {filename}
 ```
