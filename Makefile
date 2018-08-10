@@ -5,7 +5,7 @@ GITHUB_USERNAME=sachaos
 
 prepare:
 	dep ensure
-	(cd assets && npm install)
+	(cd front && npm install && npm run build)
 	go get github.com/rakyll/statik
 	go generate
 
