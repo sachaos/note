@@ -5,6 +5,7 @@
   "main": "main.js",
   "dependencies": {
     "github-markdown-css": "^2.10.0",
+    "plantuml-encoder": "^1.2.5",
     "pnotify": "^4.0.0-alpha.4"
   },
   "devDependencies": {},
