@@ -10,9 +10,20 @@ This command improve your Markdown editing experience on your favorite editor(em
 
 This software watch markdown file which you are editing, and serve that markuped HTML to browser through WebSocket when that file changed.
 
+## Features
+
+* Style like GitHub
+* No dependencies on specific editor
+    * `note` use editor which is set in `$EDITOR`
+* Support PlantUML
+
 ## Demo
 
 ![note2 mp4](https://user-images.githubusercontent.com/6121271/43771050-f421ce64-9a78-11e8-9457-256234365032.gif)
+
+### PlantUML
+
+![plantuml mp4](https://user-images.githubusercontent.com/6121271/43970738-84e33dba-9d09-11e8-94d4-909681344824.gif)
 
 ## Install
 
