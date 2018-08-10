@@ -10,6 +10,8 @@
     "pnotify": "^4.0.0-alpha.4"
   },
   "devDependencies": {
+    "css-loader": "^1.0.0",
+    "style-loader": "^0.22.1",
     "webpack": "^4.16.5",
     "webpack-cli": "^3.1.0"
   },

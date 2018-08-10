@@ -1,11 +1,15 @@
-// import PNotify from 'node_modules/pnotify/dist/es/PNotify.js';
 import PNotify from 'pnotify/dist/es/PNotify.js';
 import hljs from 'highlight.js';
+
+import 'pnotify/dist/PNotifyBrightTheme.css';
+import 'github-markdown-css/github-markdown.css';
+import 'highlight.js/styles/github.css';
+import './main.css';
 
 if (!window["WebSocket"]) {
     alert("Error! Your browser is out of support.");
 } else {
-    socket = new WebSocket("ws://localhost:1129/ws");
+    let socket = new WebSocket("ws://localhost:1129/ws");
     socket.onclose = function() {
         PNotify.error("Connection closed.");
     };
