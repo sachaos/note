@@ -82,12 +82,12 @@ func (m *markupHandler) Start() {
 				msg := createMessage(result, m.initialFileName, lines)
 
 				if err := ws.WriteMessage(websocket.TextMessage, msg); err != nil {
-					logPrintln(err)
+					logPrintln("WriteMessage Error:", err)
 					return
 				}
 			}
 		case err := <-m.fw.Errors:
-			logPrintln("WatchError:", err)
+			logPrintln("Watch Error:", err)
 			return
 		}
 	}
