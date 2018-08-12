@@ -32,7 +32,7 @@ This software watch markdown file which you are editing, and serve that markuped
 Go to [release page](https://github.com/sachaos/note/releases) and download.
 
 ```shell
-$ wget https://github.com/sachaos/note/releases/download/v0.1.1/note_darwin_amd64 -O /usr/local/bin/note
+$ wget https://github.com/sachaos/note/releases/download/v0.1.2/note_darwin_amd64 -O /usr/local/bin/note
 $ chmod +x /usr/local/bin/note
 ```
 
