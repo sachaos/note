@@ -74,16 +74,16 @@ func (m *markupHandler) Start() {
 	for {
 		select {
 		case event := <-m.fw.Events:
-			for _, ws := range m.subscribers {
-				logPrintln("event:", event)
-				result := markdownFileToHTML(event.Name)
-				lines := diffLines(string(m.current), string(result))
-				m.current = result
-				msg := createMessage(result, m.initialFileName, lines)
+			logPrintln("event:", event)
+			result := markdownFileToHTML(event.Name)
+			lines := diffLines(string(m.current), string(result))
+			m.current = result
+			msg := createMessage(result, m.initialFileName, lines)
 
+			for i, ws := range m.subscribers {
 				if err := ws.WriteMessage(websocket.TextMessage, msg); err != nil {
 					logPrintln("WriteMessage Error:", err)
-					return
+					m.subscribers = append(m.subscribers[:i], m.subscribers[i+1:]...)
 				}
 			}
 		case err := <-m.fw.Errors:
