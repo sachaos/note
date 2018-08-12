@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/pkg/browser"
 	"github.com/rakyll/statik/fs"
@@ -67,7 +68,14 @@ func run(c *cli.Context) error {
 	}
 
 	logPrintln("Call runEditor()")
-	return runEditor(filename)
+
+	if c.Bool("no-editor") {
+		for {
+			time.Sleep(1 * time.Second)
+		}
+	} else {
+		return runEditor(filename)
+	}
 }
 
 func main() {
@@ -80,6 +88,9 @@ func main() {
 		cli.BoolFlag{
 			Name:   "debug",
 			Hidden: true,
+		},
+		cli.BoolFlag{
+			Name: "no-editor",
 		},
 	}
 
