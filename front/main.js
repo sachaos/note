@@ -30,11 +30,19 @@ if (!window["WebSocket"]) {
             var maxLine = Math.max.apply(null, data.lines);
             var minLine = Math.min.apply(null, data.lines);
 
+            console.log("Diff found.");
+
             var maxOffset = document.getElementById(maxLine).offsetTop;
             var minOffset = document.getElementById(minLine).offsetTop;
 
+            console.log("maxOffset:", maxOffset);
+            console.log("minOffset:", minOffset);
+
             var windowMinOffset = window.pageYOffset;
             var windowMaxOffset = window.pageYOffset + window.innerHeight;
+
+            console.log("windowMinOffset:", windowMinOffset);
+            console.log("windowMaxOffset:", windowMaxOffset);
 
             if (maxOffset > windowMaxOffset) {
                 window.scroll(0, maxOffset);
