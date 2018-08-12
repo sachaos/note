@@ -82,7 +82,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "note"
 	app.Usage = "Realtime markdown previewer"
-	app.Version = "0.1.0"
+	app.Version = "0.1.1"
 
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
