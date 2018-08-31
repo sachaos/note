@@ -97,6 +97,15 @@ func main() {
 	app.Before = cli.BeforeFunc(before)
 	app.Action = cli.ActionFunc(run)
 
+	app.Commands = cli.Commands{
+		cli.Command{
+			Name:   "publish",
+			Usage:  "Upload to GitHub Gist",
+			Action: Publish,
+			Before: Auth,
+		},
+	}
+
 	if err := app.Run(os.Args); err != nil {
 		logPrintln(err)
 		fmt.Fprintln(os.Stderr, "Error:", err)
