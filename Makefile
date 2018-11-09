@@ -4,7 +4,6 @@ ARTIFACTS_DIR=artifacts/${VERSION}
 GITHUB_USERNAME=sachaos
 
 prepare:
-	dep ensure
 	(cd front && npm install && npm run build)
 	go get github.com/rakyll/statik
 	go generate
