@@ -5,7 +5,7 @@ Simple Real-time Markdown previewer & editor.
 
 ## Description
 
-`note` is a command written in Golang.
+`note` is a command written in Go.
 This command improve your Markdown editing experience on your favorite editor(emacs, vim etc) by rendering on Web browser in real time.
 
 This software watch markdown file which you are editing, and serve that markuped HTML to browser through WebSocket when that file changed.
@@ -31,14 +31,16 @@ This software watch markdown file which you are editing, and serve that markuped
 
 Go to [release page](https://github.com/sachaos/note/releases) and download.
 
+or
+
 ```shell
-$ wget https://github.com/sachaos/note/releases/download/v0.2.0/note_darwin_amd64 -O /usr/local/bin/note
+$ wget https://github.com/sachaos/note/releases/download/v0.2.1/note_darwin_amd64 -O /usr/local/bin/note
 $ chmod +x /usr/local/bin/note
 ```
 
 ### Manually Build
 
-You need Golang compiler, and [golang/dep: Go dependency management tool](https://github.com/golang/dep), and npm.
+You need Go 1.11 compiler.
 
 ```shell
 $ git clone https://github.com/sachaos/note.git
