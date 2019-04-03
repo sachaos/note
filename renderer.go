@@ -91,7 +91,7 @@ func (r *renderer) processTaskList(node *blackfriday.Node) bool {
 func (r *renderer) getTaskListItemPrefix(node *blackfriday.Node) []byte {
 	if bytes.HasPrefix(node.Literal, []byte("[ ] ")) {
 		return uncheckedTag
-	} else if bytes.HasPrefix(node.Literal, []byte("[x] ")) {
+	} else if bytes.HasPrefix(node.Literal, []byte("[x] ")) || bytes.HasPrefix(node.Literal, []byte("[X] ")) {
 		return checkedTag
 	}
 	return []byte{}
