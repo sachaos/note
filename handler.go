@@ -137,5 +137,11 @@ func markdownFileToHTML(filename string) []byte {
 		panic(err)
 	}
 
-	return blackfriday.Run(bytes, blackfriday.WithExtensions(blackfriday.CommonExtensions))
+	return blackfriday.Run(
+		bytes,
+		blackfriday.WithExtensions(blackfriday.CommonExtensions),
+		blackfriday.WithRenderer(newRenderer(blackfriday.HTMLRendererParameters{
+			Flags: blackfriday.CommonHTMLFlags,
+		})),
+	)
 }
