@@ -34,7 +34,7 @@ Go to [release page](https://github.com/sachaos/note/releases) and download.
 or
 
 ```shell
-$ wget https://github.com/sachaos/note/releases/download/v0.2.1/note_darwin_amd64 -O /usr/local/bin/note
+$ wget https://github.com/sachaos/note/releases/download/v0.3.0/note_darwin_amd64 -O /usr/local/bin/note
 $ chmod +x /usr/local/bin/note
 ```
 
