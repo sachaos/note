@@ -3,6 +3,7 @@ module github.com/sachaos/note
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.7
+	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/gorilla/websocket v1.4.0
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/pmezard/go-difflib v1.0.0 // indirect

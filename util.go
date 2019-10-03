@@ -8,7 +8,6 @@ import (
 	"strings"
 )
 
-// TODO: Enable to control by option
 var logFlag = false
 
 func logPrintln(v ...interface{}) {
