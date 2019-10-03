@@ -26,7 +26,6 @@ func before(c *cli.Context) error {
 	return nil
 }
 
-
 func inject(path string, handler http.Handler) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +126,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "note"
 	app.Usage = "Realtime markdown previewer"
-	app.Version = "0.3.0"
+	app.Version = "0.4.0"
 
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
