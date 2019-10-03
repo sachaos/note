@@ -3,14 +3,18 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"path"
 	"time"
 
+	"github.com/go-chi/chi"
 	"github.com/pkg/browser"
 	"github.com/rakyll/statik/fs"
-	_ "github.com/sachaos/note/statik"
 	"github.com/urfave/cli"
+
+	_ "github.com/sachaos/note/statik"
 )
 
 //go:generate statik -f -src=assets
@@ -20,6 +24,40 @@ func before(c *cli.Context) error {
 		logFlag = true
 	}
 	return nil
+}
+
+
+func inject(path string, handler http.Handler) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			logPrintln("path: %s", r.URL.Path)
+
+			if r.URL.Path == path {
+				logPrintln("serve index")
+				handler.ServeHTTP(w, r)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+func render(fs http.FileSystem, filename string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		file, err := fs.Open(filename)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			io.WriteString(w, "file not found")
+			return
+		}
+		_, err = io.Copy(w, file)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	})
 }
 
 func run(c *cli.Context) error {
@@ -42,6 +80,9 @@ func run(c *cli.Context) error {
 		}
 	}
 
+	dirName := path.Dir(filename)
+	logPrintln("dirname:", dirName)
+
 	statikFS, err := fs.New()
 	if err != nil {
 		return err
@@ -51,12 +92,16 @@ func run(c *cli.Context) error {
 	go markupHandler.Start()
 	defer markupHandler.Close()
 
-	http.Handle("/", http.StripPrefix("/", http.FileServer(statikFS)))
-	http.Handle("/ws", markupHandler)
+	r := chi.NewRouter()
+	r.Use(inject("/", render(statikFS, "/index.html")))
+
+	r.Handle("/note-static/bundle.js", render(statikFS, "/note-static/bundle.js"))
+	r.Handle("/ws", markupHandler)
+	r.Handle("/*", http.FileServer(http.Dir(dirName)))
 
 	go func() {
 		logPrintln("Call http.ListenAndServe")
-		if err := http.ListenAndServe(":1129", nil); err != nil {
+		if err := http.ListenAndServe(":1129", r); err != nil {
 			logPrintln(err)
 			os.Exit(1)
 		}
